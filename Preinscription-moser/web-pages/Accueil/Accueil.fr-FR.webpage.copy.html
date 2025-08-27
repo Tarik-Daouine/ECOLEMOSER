@@ -1,14 +1,11 @@
 
 <form id="start-form">
-  <div>
-    <label for="accountId">Identifiant du compte</label>
-    <input type="text" id="accountId" required />
-  </div>
-  <div>
-    <label for="parent1Email">Email du Parent 1</label>
-    <input type="email" id="parent1Email" required />
-  </div>
-  <button type="submit">Commencer la pré‑inscription</button>
+  <input
+    type="hidden"
+    id="accountId"
+    value="{{ user.parentcustomerid.id }}"
+  />
+  <input type="hidden" id="parent1Email" value="{{ user.email }}" />
 </form>
 
 <script src="Accueil.fr-FR.customjs.js"></script>
