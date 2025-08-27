@@ -4,21 +4,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const api = {
     async getChildren(accountId) {
+      const filter = encodeURIComponent(
+        `new_typedecontact eq 100000000 and _parentcustomerid_value eq ${accountId}`
+      );
+      const url = `/_api/contacts?$select=contactid,fullname&$filter=${filter}`;
       try {
-        const resp = await fetch(`/api/children?accountid=${encodeURIComponent(accountId)}`);
-        if (!resp.ok) return [];
-        return await resp.json();
-      } catch {
+        const resp = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!resp.ok) {
+          console.log('[Pré-inscription] getChildren HTTP', resp.status);
+          return [];
+        }
+        const data = await resp.json();
+        return data.value || [];
+      } catch (err) {
+        console.log('[Pré-inscription] getChildren error', err);
+
         return [];
       }
     },
     async getParent2(accountId, parent1Email) {
+      const filter = encodeURIComponent(
+        `new_typedecontact eq 100000001 and _parentcustomerid_value eq ${accountId} and emailaddress1 ne '${parent1Email}'`
+      );
+      const url = `/_api/contacts?$select=contactid&$top=1&$filter=${filter}`;
       try {
-        const url = `/api/parent2?accountid=${encodeURIComponent(accountId)}&email=${encodeURIComponent(parent1Email)}`;
-        const resp = await fetch(url);
-        if (!resp.ok) return null;
-        return await resp.json();
-      } catch {
+        const resp = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!resp.ok) {
+          console.log('[Pré-inscription] getParent2 HTTP', resp.status);
+          return null;
+        }
+        const data = await resp.json();
+        return data.value && data.value[0] ? data.value[0] : null;
+      } catch (err) {
+        console.log('[Pré-inscription] getParent2 error', err);
+
         return null;
       }
     }
@@ -33,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { after: 'parent1', accountId, parent1Email },
       api
     );
+    console.log('[Pré-inscription] redirecting to', url);
 
     window.location.href = url;
   });
