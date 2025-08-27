@@ -151,7 +151,7 @@ Fin de parcours → bouton “Valider” → Flow Power Automate (PDF + Signatur
 
 # PROMPT ULTRA DÉTAILLÉ POUR CODEX
 
-Tu es un assistant de développement qui va **écrire/modifier le code** d’une page Power Pages « Accueil.html » pour implémenter un **router multi‑étapes** de pré‑inscription.
+Tu es un assistant de développement qui va **écrire** d’une page Power Pages « Accueil.html » pour implémenter un **router multi‑étapes** de pré‑inscription.
 
 ## Contexte technique
 
@@ -161,78 +161,12 @@ Tu es un assistant de développement qui va **écrire/modifier le code** d’une
 * Relations : `contact.parentcustomerid` → `account` (Famille).
 * API : **Portals Web API** (`/_api/contacts`, `/_api/opportunities`, …). Toujours encoder `$filter` via `encodeURIComponent`.
 * Sécurité : les requêtes Web API doivent fonctionner avec Table Permissions.
+* Champs à étape multiple "One-Page"
 
-## Tâche
-
-Implémenter dans **Accueil.html** le code suivant :
-
-1. **Initialisation contexte**
-
-* Créer un objet global `window.__ctx` avec :
-
-  * `parentTypeValue`, `childTypeValue` (constantes optionset).
-  * `stepParent1`, `stepEleveEdit`, `stepP2Edit`, `stepP2Create` (GUIDs placeholders).
-  * `parent1Id`, `parent1Email`, `accountId` (
-    *obtenus d’abord via Liquid `user.*`, puis fallback Web API `/_api/contacts({parent1Id})?$select=_parentcustomerid_value,emailaddress1`*).
-
-2. **Router principal**
-
-* Lire l’URL courante (`new URL(location.href)`), `searchParams`.
-* Si `stepid` **absent** → rediriger vers **Parent1** :
-  `?stepid=${stepParent1}&parent1id=${parent1Id}`.
-* Si `after=parent1` → charger enfants :
-
-  * Requête : `/_api/contacts?$select=contactid,fullname&$filter=new_typedecontact eq ${childTypeValue} and _parentcustomerid_value eq ${accountId}`.
-  * Si 0 enfant → aller à **Parent2 decision**.
-  * Sinon → `remaining = [list ids]`; rediriger vers **ELEVE\_EDIT** :
-    `?stepid=${stepEleveEdit}&eleveid=${remaining[0]}&remaining=${remaining.join(',')}`.
-* Si `after=eleve` → maintenir l’état de la boucle :
-
-  * Paramètres : `done`, `remaining` (csv).
-  * Retirer `done` de `remaining`.
-  * Si `remaining.length>0` → **ELEVE\_EDIT** suivant.
-  * Sinon → **Parent2 decision**.
-* **Parent2 decision** :
-
-  * Requête : `/_api/contacts?$select=contactid&$top=1&$filter=new_typedecontact eq ${parentTypeValue} and _parentcustomerid_value eq ${accountId} and emailaddress1 ne '${parent1EmailEscaped}'`.
-  * Si trouvé → `?stepid=${stepP2Edit}&parent2id=${id}`.
-  * Sinon → `?stepid=${stepP2Create}&accountid=${accountId}`.
-
-3. **Redirections**
-
-* Écrire une fonction `setAndGo(paramsObj)` :
-
-  * Construit `new URLSearchParams(paramsObj)`.
-  * Compare à `location.search` et fait `location.replace(target)` si différent.
-  * Sinon, masque `#route-loader` et affiche `#webform-shell`.
-
-4. **Post‑save redirect** (à configurer côté Web Form)
-
-* **Parent1\_EDIT** → `…/Accueil?after=parent1`
-* **ELEVE\_EDIT** → `…/Accueil?after=eleve&done=<eleveid>&remaining=<remaining>`
-* **P2\_EDIT | P2\_CREATE** → `…/Accueil?after=parent2`
-
-5. **Robustesse**
-
-* Encapsuler les appels fetch dans `try/catch`, logguer les erreurs (`console.error`).
-* Toujours **encoder** le `$filter` (`encodeURIComponent`).
-* Protéger l’usage d’emails dans OData (`replace(/'/g, "''")`).
-* Si `accountId` indisponible après fallback, afficher un message explicite dans la console et **ne pas** tenter la suite (évite boucles).
-
-6. **Sortie UI**
-
-* Un `div#route-loader` avec “Préparation du formulaire…”.
-* Un `div#webform-shell` qui contient :
-
-  ```liquid
-  {% if request.params.stepid %}
-    {% webform name:'Préinscription' %}
-  {% endif %}
-  ```
 
 ## Acceptation
 
-* Cas 1 : Famille avec 2+ enfants → passage séquentiel sur chaque enfant (2 formulaires Élève minimum), puis Parent2 decision.
+* Cas 1 : Famille avec 2+ enfants → passage séquentiel sur chaque enfant (menu déroulant de la liste des enfants lié à la famille), puis Parent2 decision.
 * Cas 2 : Famille sans Parent2 → création Parent2 avec `accountid` auto.
 * Cas 3 : Famille avec Parent2 existant → modification Parent2.
 * Les redirections **n’affichent jamais** un Web Form sans `recordId` attendu.
@@ -246,7 +180,4 @@ Implémenter dans **Accueil.html** le code suivant :
 * **Aucune** dépendance à des librairies (jQuery, etc.).
 
 ## À livrer
-
-* Le bloc `<script>` complet pour Accueil.html (initialisation + router).
-* Les valeurs à remplacer clairement indiquées (GUID d’étapes, valeurs optionset).
 * Logs `console.log` lisibles pour le debug (prefix `[Pré-inscription]`).
