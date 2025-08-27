@@ -4,6 +4,24 @@
 
 Dématérialiser et automatiser la pré‑inscription dans Dataverse/Dynamics via Power Pages : Parent 1 authentifié, centralisation des données Élève/Parents, génération PDF, envoi signature (DocuSign/SignNow), suivi dans l’Opportunité, champs sensibles verrouillés.
 
+### Objectifs du formulaire « Préinscription »
+
+- Centraliser les données de la famille pour générer un dossier de pré‑inscription, l'envoyer en signature électronique et suivre l'opportunité associée.
+- Parcours guidé en trois blocs : Parent 1, séquence d’Enfant(s), puis Parent 2.
+
+### Conditions d’accès et de navigation
+
+- Parent 1 doit être un utilisateur portail authentifié rattaché au compte famille.
+- Parent 2 est un autre contact de la même famille avec une adresse e‑mail différente.
+- Les Enfant(s) sont des contacts de type « Enfant » liés à ce compte.
+- Le routage repose sur des paramètres de query string (`parent1id`, `eleveid`, `parent2id`, `accountid`).
+
+### Contraintes techniques et fonctionnelles
+
+- Distinction des rôles par l’option‑set `new_typedecontact`.
+- Table Permissions limitant la lecture/écriture aux membres de la même famille et champs sensibles verrouillés via Form Metadata.
+- Séquence Enfant(s) répétable : après chaque sauvegarde, retour à la liste jusqu’à ce que tous soient traités avant la décision sur Parent 2.
+
 ---
 
 ## 1) Données & hypothèses clefs
