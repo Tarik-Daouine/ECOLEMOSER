@@ -1,6 +1,7 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('start-form');
-  if (!form) return;
+document.addEventListener('DOMContentLoaded', async () => {
+  const accountIdField = document.getElementById('accountId');
+  const parent1EmailField = document.getElementById('parent1Email');
+  if (!accountIdField || !parent1EmailField) return;
 
   const api = {
     async getChildren(accountId) {
@@ -43,19 +44,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    const accountId = document.getElementById('accountId').value.trim();
-    const parent1Email = document.getElementById('parent1Email').value.trim();
+  const accountId = accountIdField.value.trim();
+  const parent1Email = parent1EmailField.value.trim();
 
-    const url = await route(
-      { after: 'parent1', accountId, parent1Email },
-      api
-    );
-    console.log('[Pré-inscription] redirecting to', url);
+  const url = await route(
+    { after: 'parent1', accountId, parent1Email },
+    api
+  );
+  console.log('[Pré-inscription] redirecting to', url);
 
-    window.location.href = url;
-  });
+  window.location.href = url;
 });
 
 async function route(params, api) {
