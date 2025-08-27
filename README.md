@@ -12,8 +12,8 @@ Dématérialiser et automatiser la pré‑inscription dans Dataverse/Dynamics vi
 * **Relations** : `contact.parentcustomerid → account` (Contact → Compte Famille).
 * **Distinction des rôles** (Optionset `new_typedecontact`, valeurs **numériques**) :
 
-  * Parent : `100000001` (à confirmer)
-  * Enfant : `100000000` (à confirmer)
+  * Parent : `100000001`
+  * Enfant : `100000000`
 * **Parent 1** : utilisateur portail connecté (objet Liquid `user`), lié à `account` (Famille).
 * **Parent 2** : autre `contact` de la même Famille, `typedecontact=Parent`, `email ≠ Parent1`.
 * **Enfants** : `contact` avec `typedecontact=Enfant` et `_parentcustomerid_value = Famille`.
@@ -53,11 +53,17 @@ Dématérialiser et automatiser la pré‑inscription dans Dataverse/Dynamics vi
      * Nom du paramètre : `accountid` (**primary key** : Oui)
    * Post‑save redirect : `…/Accueil?after=parent2`
 
-> **Note** : l’étape **Élève** est appelée en boucle sur chaque enfant. L’ordre global peut rester « Parent1 → Enfant(s) → Parent2 ».
+ > **Note** : l’étape **Élève** est appelée en boucle sur chaque enfant. L’ordre global peut rester « Parent1 → Enfant(s) → Parent2 ».
+
+### Router JavaScript
+
+Un router JavaScript orchestre ces étapes. Après la sauvegarde de **Parent1**, il récupère la liste des enfants via l’API, boucle sur chacun d’eux en appelant **ELEVE_EDIT** puis décide de poursuivre vers **P2_EDIT** ou **P2_CREATE** selon l’existence d’un Parent 2.
 
 ---
 
 ## 3) Parcours utilisateur – vue d’ensemble
+
+Exemple de séquence d’écrans : **Parent1** → **liste/édition des enfants** → **décision Parent2** → **récap/validation**.
 
 ```
 Entrée (Parent1 authentifié)
@@ -79,7 +85,15 @@ Fin de parcours → bouton “Valider” → Flow Power Automate (PDF + Signatur
 
 ---
 
-## 4) Algorithme de routage (pseudocode)
+## 4) Documentation technique
+
+* **Constantes option-set** : `Parent=100000001`, `Enfant=100000000`.
+* **API utilisée** : `/_api/contacts`.
+* **Paramètres de query string** : `parent1id`, `eleveid`, `parent2id`, `accountid`.
+
+---
+
+## 5) Algorithme de routage (pseudocode)
 
 1. **Pré‑flight** : récupérer `accountId` & `parent1Id`.
 
@@ -107,7 +121,7 @@ Fin de parcours → bouton “Valider” → Flow Power Automate (PDF + Signatur
 
 ---
 
-## 5) UX – écrans
+## 6) UX – écrans
 
 * **Accueil/router** : écran transitoire “Préparation du formulaire…”, invisible après redirection.
 * **Parent1\_EDIT** : champs Parent1 en **Edit**, champs sensibles **ReadOnly**.
@@ -117,7 +131,7 @@ Fin de parcours → bouton “Valider” → Flow Power Automate (PDF + Signatur
 
 ---
 
-## 6) Power Automate – chaîne documentaire
+## 7) Power Automate – chaîne documentaire
 
 1. **Trigger** : bouton “Valider” (HTTP request ou action Dataverse).
 2. **Get records** : Parent1, Parent2 (si existe), enfants, opportunité.
@@ -127,7 +141,7 @@ Fin de parcours → bouton “Valider” → Flow Power Automate (PDF + Signatur
 
 ---
 
-## 7) Sécurité & règles
+## 8) Sécurité & règles
 
 * **Table Permissions** :
 
@@ -139,13 +153,12 @@ Fin de parcours → bouton “Valider” → Flow Power Automate (PDF + Signatur
 
 ---
 
-## 8) Tests (acceptance)
+## 9) Tests (acceptance)
 
-* **Parent2 existant** : arrive en P2\_EDIT avec le bon `parent2id`.
-* **Parent2 absent** : arrive en P2\_CREATE avec `accountid` pré‑rempli.
-* **Plusieurs enfants** : la boucle passe par **tous** les enfants, sans en oublier.
-* **Permissions** : impossible d’accéder à un enfant d’une autre Famille.
-* **PDF/Signature** : PDF généré, signature envoyée, retour de statut OK, Opportunité mise à jour.
+* **Aucun enfant** : après `after=parent1`, le router saute directement à la décision Parent2.
+* **Plusieurs enfants** : la boucle traite chaque enfant et s’arrête uniquement quand `remaining` est vide.
+* **Parent2 existant** : la décision Parent2 redirige vers **P2\_EDIT** avec le `parent2id` détecté.
+* **Parent2 à créer** : absence de Parent2 déclenche **P2\_CREATE** avec `accountid` pré‑rempli.
 
 ---
 
