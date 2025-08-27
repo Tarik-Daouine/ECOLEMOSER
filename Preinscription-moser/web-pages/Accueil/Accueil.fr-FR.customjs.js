@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return data.value || [];
       } catch (err) {
         console.log('[Pré-inscription] getChildren error', err);
+
         return [];
       }
     },
@@ -36,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return data.value && data.value[0] ? data.value[0] : null;
       } catch (err) {
         console.log('[Pré-inscription] getParent2 error', err);
+
         return null;
       }
     }
@@ -51,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
       api
     );
     console.log('[Pré-inscription] redirecting to', url);
+
     window.location.href = url;
   });
 });
