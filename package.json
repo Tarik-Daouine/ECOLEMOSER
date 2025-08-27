@@ -1,0 +1,13 @@
+{
+  "name": "ecolemoser",
+  "version": "1.0.0",
+  "description": "Dématérialiser et automatiser la pré‑inscription dans Dataverse/Dynamics via Power Pages : Parent 1 authentifié, centralisation des données Élève/Parents, génération PDF, envoi signature (DocuSign/SignNow), suivi dans l’Opportunité, champs sensibles verrouillés.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
